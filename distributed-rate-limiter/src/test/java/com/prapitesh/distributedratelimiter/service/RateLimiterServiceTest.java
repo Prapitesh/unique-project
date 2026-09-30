@@ -1,18 +1,38 @@
 package com.prapitesh.distributedratelimiter.service;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.StringRedisTemplate;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@SpringBootTest
 public class RateLimiterServiceTest {
+
+    @Autowired
+    private RateLimiterService rateLimiterService;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
+    @BeforeEach
+    void cleanRedis() {
+        redisTemplate.delete("rate_limit:user123");
+        redisTemplate.delete("rate_limit:user456");
+    }
+
     @Test
     void shouldMaintainSeparateBucketsForDifferentClients() {
-        RateLimiterService rateLimiterService = new RateLimiterService();
-        // user123 gets 3 tokens
+
         assertTrue(rateLimiterService.isAllowed("user123"));
         assertTrue(rateLimiterService.isAllowed("user123"));
         assertTrue(rateLimiterService.isAllowed("user123"));
-        // user123 has exhausted its bucket
+
         assertFalse(rateLimiterService.isAllowed("user123"));
-        // user456 has its own separate bucket
+
         assertTrue(rateLimiterService.isAllowed("user456"));
     }
 }
