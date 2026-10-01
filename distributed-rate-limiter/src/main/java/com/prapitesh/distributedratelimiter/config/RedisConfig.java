@@ -15,5 +15,6 @@ public class RedisConfig {
         script.setLocation(new ClassPathResource("scripts/rate_limiter.lua"));
         script.setResultType(Long.class);
         return script;
+
     }
 }
