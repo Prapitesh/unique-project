@@ -6,6 +6,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 
+import java.util.List;
+
 @Configuration
 public class RedisConfig {
 
@@ -22,6 +24,14 @@ public class RedisConfig {
         DefaultRedisScript<Long> script = new DefaultRedisScript<>();
         script.setLocation(new ClassPathResource("scripts/sliding_window.lua"));
         script.setResultType(Long.class);
+        return script;
+    }
+
+    @Bean
+    public RedisScript<List<Long>> leakyBucketScript() {
+        DefaultRedisScript<List<Long>> script = new DefaultRedisScript<>();
+        script.setLocation(new ClassPathResource("scripts/leaky_bucket.lua"));
+        script.setResultType((Class)List.class);
         return script;
     }
 }

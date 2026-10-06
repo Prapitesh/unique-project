@@ -10,13 +10,16 @@ public class RateLimiterService {
     private final StringRedisTemplate redisTemplate;
     private final RedisScript<Long> rateLimiterScript;
     private final RedisScript<Long> slidingWindowScript;
+    private final RedisScript<List<Long>> leakyBucketScript;
     public RateLimiterService(
             StringRedisTemplate redisTemplate,
             RedisScript<Long> rateLimiterScript,
-            RedisScript<Long> slidingWindowScript) {
+            RedisScript<Long> slidingWindowScript,
+            RedisScript<List<Long>> leakyBucketScript) {
         this.redisTemplate = redisTemplate;
         this.rateLimiterScript = rateLimiterScript;
         this.slidingWindowScript = slidingWindowScript;
+        this.leakyBucketScript = leakyBucketScript;
     }
     public boolean isAllowed(String clientId){
         System.out.println("Checking rate limit for client: " + clientId);
@@ -31,5 +34,11 @@ public class RateLimiterService {
         String requestId=clientId+":"+System.nanoTime();
         Long r=redisTemplate.execute(slidingWindowScript, List.of(k),"3","10",requestId);
         return r!=null&&r==1L;
+    }
+    public List<Long> isAllowedLeakyBucket(String clientId){
+        System.out.println("Checking leaky bucket rate limit for client: " + clientId);
+        String k="rate_limit:leaky"+clientId;
+        return redisTemplate.execute(leakyBucketScript,List.of(k),"3","1");
+//        return r!=null&&r.get(0)==1L;
     }
 }
