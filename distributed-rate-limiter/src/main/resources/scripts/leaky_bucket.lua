@@ -8,7 +8,7 @@ local lastLeak = tonumber(redis.call('HGET', key, 'lastLeak') or currentTime)
 local elapsed = currentTime - lastLeak
 level = math.max(0, level - elapsed * leakRate)
 if level + 1 > capacity then
-    local retryAfterMs = math.floor((level + 1 - capacity) / leakRate * 1000)
+    local retryAfterMs = math.ceil((level + 1 - capacity) / leakRate * 1000)
     return {0, retryAfterMs}
 end
 level = level + 1
