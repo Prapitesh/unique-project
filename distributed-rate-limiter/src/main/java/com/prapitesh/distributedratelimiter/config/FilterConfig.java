@@ -16,5 +16,7 @@ public class FilterConfig {
         registration.setFilter(filter);
         registration.addUrlPatterns("/api/*");
         return registration;
+
+
     }
 }
