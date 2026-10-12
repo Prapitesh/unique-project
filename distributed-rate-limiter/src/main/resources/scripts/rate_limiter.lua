@@ -28,8 +28,8 @@ if tokens >= 1 then
 end
 
 redis.call('HSET', key,
-        'tokens', tokens,
-        'lastRefillTime', currentTime
+        'tokens', tostring(tokens),
+        'lastRefillTime', tostring(currentTime)
 )
 
 return allowed

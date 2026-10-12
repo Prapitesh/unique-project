@@ -20,6 +20,18 @@ class RateLimiterFilterTest {
     private MockMvc mockMvc;
 
     @Test
+    void shouldReturnBadRequestWhenClientIdIsMissing() throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/test"))
+                .andReturn();
+
+        assertEquals(400, result.getResponse().getStatus());
+        assertEquals(
+                "{\"error\":\"X-Client-Id header is required\"}",
+                result.getResponse().getContentAsString()
+        );
+    }
+
+    @Test
     void shouldReturnTooManyRequestsWhenBucketIsFull() throws Exception {
         String clientId = "filter-test-" + java.util.UUID.randomUUID();
 
@@ -49,5 +61,36 @@ class RateLimiterFilterTest {
                 fourth.getResponse().getContentAsString()
                         .contains("Too many requests")
         );
+        assertEquals(
+                "{\"error\":\"Too many requests\"}",
+                fourth.getResponse().getContentAsString()
+        );
+
+        assertTrue(
+                fourth.getResponse().getHeader("Retry-After") != null
+        );
     }
+
+    @Test
+    void shouldKeepRateLimitsSeparateForDifferentClients() throws Exception {
+        String clientA = "client-A-" + java.util.UUID.randomUUID();
+        String clientB = "client-B-" + java.util.UUID.randomUUID();
+
+        // Exhaust Client A's bucket.
+        for (int i = 0; i < 4; i++) {
+            mockMvc.perform(
+                    get("/api/test").header("X-Client-Id", clientA)
+            ).andReturn();
+        }
+
+        // Client B should still have its own available bucket.
+        MvcResult clientBResult = mockMvc.perform(
+                get("/api/test").header("X-Client-Id", clientB)
+        ).andReturn();
+
+        assertEquals(200, clientBResult.getResponse().getStatus());
+    }
+
+
+
 }

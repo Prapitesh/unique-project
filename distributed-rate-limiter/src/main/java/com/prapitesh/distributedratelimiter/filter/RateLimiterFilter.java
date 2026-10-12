@@ -21,6 +21,14 @@ public class RateLimiterFilter extends OncePerRequestFilter {
             throws IOException, ServletException {
         System.out.println("Request received");
         String clientId = request.getHeader("X-Client-Id");
+        if (clientId == null || clientId.isBlank()) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.setContentType("application/json");
+            response.getWriter().write(
+                    "{\"error\":\"X-Client-Id header is required\"}"
+            );
+            return;
+        }
         System.out.println("Client ID: " + clientId);
         List<Long> result = rateLimiterService.isAllowedLeakyBucket(clientId);
 

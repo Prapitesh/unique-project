@@ -25,29 +25,41 @@ public class RateLimiterService {
         this.leakyBucketScript = leakyBucketScript;
         this.rateLimitProperties=rateLimitProperties;
     }
-    public boolean isAllowed(String clientId){
+
+    public boolean isAllowed(String clientId) {
         System.out.println("Checking rate limit for client: " + clientId);
-        String k="rate_limit:"+clientId;
-        Long r=redisTemplate.execute(rateLimiterScript, List.of(
-                k,
+
+        String key = "rate_limit:" + clientId;
+
+        Long result = redisTemplate.execute(
+                rateLimiterScript,
+                List.of(key),
                 String.valueOf(rateLimitProperties.getCapacity()),
-                String.valueOf(rateLimitProperties.getRefillRate())
-        ),String.valueOf(System.currentTimeMillis()));
-        return r!=null&&r==1L;
+                String.valueOf(rateLimitProperties.getRefillRate()),
+                String.valueOf(System.currentTimeMillis())
+        );
+
+        return result != null && result == 1L;
     }
 
-    public boolean isAllowedSlidingWindow(String clientId){
+
+    public boolean isAllowedSlidingWindow(String clientId) {
         System.out.println("Checking sliding window rate limit for client: " + clientId);
-        String k="rate_limit:sliding"+clientId;
-        String requestId=clientId+":"+System.nanoTime();
-        Long r=redisTemplate.execute(slidingWindowScript,List.of(
-                k,
+
+        String key = "rate_limit:sliding:" + clientId;
+        String requestId = clientId + ":" + java.util.UUID.randomUUID();
+
+        Long result = redisTemplate.execute(
+                slidingWindowScript,
+                List.of(key),
                 String.valueOf(rateLimitProperties.getCapacity()),
                 String.valueOf(rateLimitProperties.getWindowSeconds()),
                 requestId
-        ));
-        return r!=null&&r==1L;
+        );
+
+        return result != null && result == 1L;
     }
+
     public List<Long> isAllowedLeakyBucket(String clientId){
         System.out.println("Checking leaky bucket rate limit for client: " + clientId);
         String k="rate_limit:leaky"+clientId;
